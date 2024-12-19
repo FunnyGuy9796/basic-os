@@ -77,59 +77,70 @@ gdt_descriptor:
 
 [bits 32]
 
+%define PAGE_DIR_ADDR 0x1000
+%define PAGE_TABLE_ADDR 0x2000
+
 setup_paging:
-    lea si, [page_table]
+    mov edi, PAGE_TABLE_ADDR
     xor ebx, ebx
 .map_pages:
     mov eax, ebx
     or eax, 0x3
-    mov [si], eax
-    add si, 4
+    mov [edi], eax
+    add edi, 4
     add ebx, 0x1000
     cmp ebx, 0x100000
     jl .map_pages
 
     ret
 
-setup_simple_paging:
-    mov eax, 0x00000003    ; Present and writable
-    mov [page_table], eax  ; Set first page table entry to map 0x00000000
-    ret
-
 clear_page_table:
-    lea ebx, [page_table]
+    mov edi, PAGE_TABLE_ADDR
     xor eax, eax
     mov ecx, 1024
 .clear_page_table_loop:
-    mov ebx, [eax]
-    add ebx, 4
+    mov [edi], eax
+    add edi, 4
     loop .clear_page_table_loop
     
     ret
 
 init_page_directory:
-    lea si, [page_directory]
+    mov edi, PAGE_DIR_ADDR
 
     xor eax, eax
     mov ecx, 1024
 .clear_directory:
-    mov [si], eax
-    add si, 4
+    mov [edi], eax
+    add edi, 4
     loop .clear_directory
 
-    lea eax, [page_table]
+    mov eax, PAGE_TABLE_ADDR
     or eax, 0x3
-    mov [page_directory], eax
+    mov [PAGE_DIR_ADDR], eax
 
     ret
 
 enable_paging:
-    lea eax, [page_directory]
+    mov eax, PAGE_DIR_ADDR
     mov cr3, eax
 
+    mov eax, cr3
+    cmp eax, PAGE_DIR_ADDR
+    je .cr3_ok
+
+    mov esi, cr3_error_msg
+    call print_pm
+
+    hlt
+.cr3_ok:
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax
+
+    mov eax, cr4
+    or eax, 0x00000010
+    mov cr4, eax
 
     ret
 
@@ -142,6 +153,8 @@ protected_mode_entry:
     mov ss, ax
 
     mov esp, 0x9000
+
+    mov edx, 0xb8000
 
     mov esi, protected_enabled_msg
     call print_pm
@@ -157,16 +170,19 @@ protected_mode_entry:
     hlt
 
 print_pm:
-    mov ebx, 0xb8000
+    mov ebx, edx
     mov ah, 0x0f
 .next_char_pm:
     lodsb
     cmp al, 0
     je .done_pm
+
     mov [ebx], ax
     add ebx, 2
     jmp .next_char_pm
 .done_pm:
+    mov edx, ebx
+
     ret
 
 second_msg db 'loaded second stage... ', 0
@@ -176,12 +192,4 @@ a20_disabled_msg db 'failed to enable a20 line... ', 0
 
 protected_enabled_msg db 'protected mode enabled... ', 0
 paging_enabled_msg db 'paging enabled... ', 0
-
-section .bss
-align 4096
-page_directory:
-    resb 4096
-
-align 4096
-page_table:
-    resb 4096
+cr3_error_msg db 'CR3 register not set successfully... ', 0
