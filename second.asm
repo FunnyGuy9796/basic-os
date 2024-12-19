@@ -16,6 +16,9 @@ start:
 
     call detect_memory
 
+    mov si, memory_map_msg
+    call print
+
     call enable_protected_mode
 
     jmp $
@@ -35,6 +38,7 @@ check_a20:
     mov ax, 0x1234
     mov [0x1000], ax
     mov ax, [0x1000]
+    
     cmp ax, 0x1234
     jne a20_disabled
 
@@ -46,38 +50,47 @@ a20_disabled:
 
     jmp $
 
+mmap_entry equ 0x9000
+
 detect_memory:
-    mov ah, 0x88
-    mov ebx, 0x9000
-    xor cx, cx
-    xor ax, ax
+    mov di, 0x9004
+    xor ebx, ebx
+    xor bp, bp
 
-next_mmap_entry:
-    mov dx, 0x534d
+.memory_loop:
+    mov eax, 0xe820
+    mov edx, 0x534D4150
+    mov ecx, 24
+    mov [es:di + 20], dword 1
+
     int 0x15
+    jc .memory_error
 
-    jc memory_error
+    cmp eax, 0x534D4150
+    jne .memory_error
 
-    cmp word [ebx], 0x534d
-    jne memory_error
+    test ebx, ebx
+    je .memory_done
 
-    mov ax, [ebx + 0x14]
-    test ax, ax
-    jz done_fetching
-
-    add ebx, 0x14
-
-    inc cx
-    jmp next_mmap_entry
-
-done_fetching:
-    ret
-
-memory_error:
+    add di, 24
+    inc bp
+    jmp .memory_loop
+.memory_error:
     mov si, memory_error_msg
     call print
 
+    stc
+
     jmp $
+.memory_done:
+    mov [es:mmap_entry], bp
+
+    mov ax, [es:mmap_entry]
+    cmp ax, bp
+    jne .memory_error
+    
+    clc
+    ret
 
 enable_protected_mode:
     cli
@@ -124,7 +137,7 @@ setup_paging:
     mov [edi], eax
     add edi, 4
     add ebx, 0x1000
-    cmp ebx, 0x100000
+    cmp ebx, 0x400000
     jl .map_pages
 
     ret
@@ -187,7 +200,7 @@ protected_mode_entry:
     mov gs, ax
     mov ss, ax
 
-    mov esp, 0x9000
+    mov esp, 0x90000
 
     mov edx, 0xb8000
 
@@ -224,6 +237,7 @@ second_msg db 'loaded second stage... ', 0
 
 a20_enabled_msg db 'a20 line enabled... ', 0
 a20_disabled_msg db 'failed to enable a20 line... ', 0
+memory_map_msg db 'memory map found... ', 0
 memory_error_msg db 'failed detecting memory... ', 0
 
 protected_enabled_msg db 'protected mode enabled... ', 0
