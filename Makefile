@@ -17,7 +17,7 @@ run: basic.img
 	qemu-system-x86_64 -m 64M -drive format=raw,file=basic.img
 
 debug: basic.img
-	qemu-system-x86_64 -m 64M -drive format=raw,file=basic.img -d int
+	qemu-system-x86_64 -m 64M -drive format=raw,file=basic.img -monitor stdio
 
 clean:
 	rm -f *.bin basic.img

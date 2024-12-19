@@ -14,9 +14,11 @@ start:
     mov si, a20_enabled_msg
     call print
 
+    call detect_memory
+
     call enable_protected_mode
 
-    hlt
+    jmp $
 
 enable_a20:
     in al, 0x92
@@ -42,7 +44,40 @@ a20_disabled:
     mov si, a20_disabled_msg
     call print
 
-    hlt
+    jmp $
+
+detect_memory:
+    mov ah, 0x88
+    mov ebx, 0x9000
+    xor cx, cx
+    xor ax, ax
+
+next_mmap_entry:
+    mov dx, 0x534d
+    int 0x15
+
+    jc memory_error
+
+    cmp word [ebx], 0x534d
+    jne memory_error
+
+    mov ax, [ebx + 0x14]
+    test ax, ax
+    jz done_fetching
+
+    add ebx, 0x14
+
+    inc cx
+    jmp next_mmap_entry
+
+done_fetching:
+    ret
+
+memory_error:
+    mov si, memory_error_msg
+    call print
+
+    jmp $
 
 enable_protected_mode:
     cli
@@ -132,7 +167,7 @@ enable_paging:
     mov esi, cr3_error_msg
     call print_pm
 
-    hlt
+    jmp $
 .cr3_ok:
     mov eax, cr0
     or eax, 0x80000000
@@ -167,7 +202,7 @@ protected_mode_entry:
     mov esi, paging_enabled_msg
     call print_pm
 
-    hlt
+    jmp $
 
 print_pm:
     mov ebx, edx
@@ -189,6 +224,7 @@ second_msg db 'loaded second stage... ', 0
 
 a20_enabled_msg db 'a20 line enabled... ', 0
 a20_disabled_msg db 'failed to enable a20 line... ', 0
+memory_error_msg db 'failed detecting memory... ', 0
 
 protected_enabled_msg db 'protected mode enabled... ', 0
 paging_enabled_msg db 'paging enabled... ', 0
