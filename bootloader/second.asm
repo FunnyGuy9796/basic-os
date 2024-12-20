@@ -19,6 +19,9 @@ start:
     mov si, memory_map_msg
     call print
 
+    push 0x1000
+    pop es
+    mov bx, 0x0
     call load_third
 
     call enable_protected_mode
@@ -117,12 +120,11 @@ print:
 
 load_third:
     mov ah, 0x02
-    mov al, 1
+    mov al, 2
     mov ch, 0
     mov cl, 4
     mov dh, 0
     mov dl, 0x80
-    mov bx, 0x10000
 
     int 0x13
 

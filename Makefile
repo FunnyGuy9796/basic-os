@@ -1,35 +1,56 @@
 .PHONY: all run clean
 
+MBR_SRC := bootloader/mbr.asm
+SECOND_SRC := bootloader/second.asm
+THIRD_SRC := $(wildcard bootloader/*.c)
+
+BIN_DIR := bin
+OBJ_DIR := $(BIN_DIR)/obj
+
+MBR_BIN := $(BIN_DIR)/mbr.bin
+SECOND_BIN := $(BIN_DIR)/second.bin
+THIRD_OBJ := $(addprefix $(OBJ_DIR)/, $(notdir $(THIRD_SRC:.c=.o)))
+THIRD_ELF := $(BIN_DIR)/third.elf
+THIRD_BIN := $(BIN_DIR)/third.bin
+
+BASIC_IMG := basic.img
+
+NASM_FLAGS := -f bin
+
 GCC := $(HOME)/opt/cross/bin/i686-elf-gcc
-GCCFLAGS := -m32 -ffreestanding
+GCC_FLAGS := -m32 -ffreestanding
 
 LD := $(HOME)/opt/cross/bin/i686-elf-ld
-LDFLAGS := -T linker.ld
+BOOT_LDFLAGS := -T bootloader/boot_linker.ld
 
-all: basic.img
+all: $(BASIC_IMG)
 
-mbr.bin: mbr.asm
-	nasm -f bin mbr.asm -o mbr.bin
+$(MBR_BIN): $(MBR_SRC)
+	nasm $(NASM_FLAGS) $(MBR_SRC) -o $(MBR_BIN)
 
-second.bin: second.asm
-	nasm -f bin second.asm -o second.bin
+$(SECOND_BIN): $(SECOND_SRC)
+	nasm $(NASM_FLAGS) $(SECOND_SRC) -o $(SECOND_BIN)
 
-third.bin: third.c
-	$(GCC) $(GCCFLAGS) -c third.c -o third.o
-	$(LD) $(LDFLAGS) -o third.elf third.o
-	objcopy -O binary third.elf third.bin
+$(OBJ_DIR)/%.o: bootloader/%.c
+	$(GCC) $(GCC_FLAGS) -c $< -o $@
 
-basic.img: mbr.bin second.bin third.bin
-	qemu-img create -f raw basic.img 12M
-	dd if=mbr.bin of=basic.img bs=512 count=1 conv=notrunc
-	dd if=second.bin of=basic.img bs=512 count=2 seek=1 conv=notrunc
-	dd if=third.bin of=basic.img bs=512 count=1 seek=3 conv=notrunc
+$(THIRD_ELF): $(THIRD_OBJ)
+	$(LD) $(BOOT_LDFLAGS) -o $(THIRD_ELF) $^
 
-run: basic.img
-	qemu-system-x86_64 -m 64M -drive format=raw,file=basic.img
+$(THIRD_BIN): $(THIRD_ELF)
+	objcopy -O binary $(THIRD_ELF) $(THIRD_BIN)
 
-debug: basic.img
-	qemu-system-x86_64 -m 64M -drive format=raw,file=basic.img -monitor stdio
+$(BASIC_IMG): $(MBR_BIN) $(SECOND_BIN) $(THIRD_BIN)
+	qemu-img create -f raw $(BASIC_IMG) 12M
+	dd if=$(MBR_BIN) of=$(BASIC_IMG) bs=512 count=1 conv=notrunc
+	dd if=$(SECOND_BIN) of=$(BASIC_IMG) bs=512 count=2 seek=1 conv=notrunc
+	dd if=$(THIRD_BIN) of=$(BASIC_IMG) bs=512 count=2 seek=3 conv=notrunc
+
+run: $(BASIC_IMG)
+	qemu-system-x86_64 -m 64M -drive format=raw,file=$(BASIC_IMG)
+
+debug: $(BASIC_IMG)
+	qemu-system-x86_64 -m 64M -drive format=raw,file=$(BASIC_IMG) -no-reboot -no-shutdown -monitor stdio
 
 clean:
-	rm -f *.bin basic.img
+	rm -f $(BIN_DIR)/*.bin $(OBJ_DIR)/*.o $(THIRD_ELF) $(THIRD_BIN) $(BASIC_IMG)
