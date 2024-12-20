@@ -19,6 +19,8 @@ start:
     mov si, memory_map_msg
     call print
 
+    call load_third
+
     call enable_protected_mode
 
     jmp $
@@ -50,10 +52,10 @@ a20_disabled:
 
     jmp $
 
-mmap_entry equ 0x9000
+mmap_entry equ 0x4000
 
 detect_memory:
-    mov di, 0x9004
+    mov di, 0x4004
     xor ebx, ebx
     xor bp, bp
 
@@ -113,6 +115,27 @@ print:
 .done:
     ret
 
+load_third:
+    mov ah, 0x02
+    mov al, 1
+    mov ch, 0
+    mov cl, 4
+    mov dh, 0
+    mov dl, 0x80
+    mov bx, 0x10000
+
+    int 0x13
+
+    jc disk_error
+
+    ret
+
+disk_error:
+    mov si, disk_error_msg
+    call print
+
+    jmp $
+
 gdt_start:
     dq 0x0000000000000000
     dq 0x00CF9A000000FFFF
@@ -140,10 +163,15 @@ setup_paging:
     cmp ebx, 0x400000
     jl .map_pages
 
+    mov eax, 0x10000
+    or eax, 0x3
+    mov [PAGE_TABLE_ADDR + (0x10000 / 0x1000 * 4)], eax
+
     ret
 
 clear_page_table:
     mov edi, PAGE_TABLE_ADDR
+
     xor eax, eax
     mov ecx, 1024
 .clear_page_table_loop:
@@ -194,13 +222,14 @@ enable_paging:
 
 protected_mode_entry:
     mov ax, 0x10
+    mov cs, ax
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
 
-    mov esp, 0x90000
+    mov esp, 0x7ffff
 
     mov edx, 0xb8000
 
@@ -213,6 +242,16 @@ protected_mode_entry:
     call enable_paging
 
     mov esi, paging_enabled_msg
+    call print_pm
+
+    mov ax, cs
+    cmp ax, 0x10
+    jne segment_error
+
+    jmp 0x08:0x10000
+
+segment_error:
+    mov esi, segment_error_msg
     call print_pm
 
     jmp $
@@ -239,7 +278,9 @@ a20_enabled_msg db 'a20 line enabled... ', 0
 a20_disabled_msg db 'failed to enable a20 line... ', 0
 memory_map_msg db 'memory map found... ', 0
 memory_error_msg db 'failed detecting memory... ', 0
+disk_error_msg db 'failed reading disk... ', 0
 
 protected_enabled_msg db 'protected mode enabled... ', 0
 paging_enabled_msg db 'paging enabled... ', 0
 cr3_error_msg db 'CR3 register not set successfully... ', 0
+segment_error_msg db 'segment error... ', 0

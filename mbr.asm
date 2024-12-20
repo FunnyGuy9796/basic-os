@@ -5,7 +5,6 @@
     mov si, boot_msg
     call print
 
-    mov bx, 0x7e00
     call load_second
 
     jmp $
@@ -29,6 +28,7 @@ load_second:
     mov cl, 2
     mov dh, 0
     mov dl, 0x80
+    mov bx, 0x7e00
 
     int 0x13
 
