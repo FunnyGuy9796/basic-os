@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "../util/util.h"
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -45,6 +46,8 @@ size_t strlen(const char* str);
 void term_init();
 
 void term_setcolor(uint8_t color);
+
+void term_move_cursor(size_t x, size_t y);
 
 void term_putentryat(char c, uint8_t color, size_t x, size_t y);
 

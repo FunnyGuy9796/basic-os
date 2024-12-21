@@ -42,8 +42,8 @@ disk_error:
 
     jmp $
 
-boot_msg db 'booting basic-os... ', 0
-error_msg db 'disk read error... ', 0
+boot_msg db 'loading second stage... ', 0
+error_msg db 'disk read error ', 0
 
 times 510-($-$$) db 0
 dw 0xaa55

@@ -22,7 +22,7 @@ start:
     push 0x1000
     pop es
     mov bx, 0x0
-    call load_third
+    call load_kernel
 
     call enable_protected_mode
 
@@ -71,7 +71,7 @@ detect_memory:
     int 0x15
     jc .memory_error
 
-    cmp eax, 0x534D4150
+    cmp eax, edx
     jne .memory_error
 
     test ebx, ebx
@@ -118,9 +118,9 @@ print:
 .done:
     ret
 
-load_third:
+load_kernel:
     mov ah, 0x02
-    mov al, 2
+    mov al, 4
     mov ch, 0
     mov cl, 4
     mov dh, 0
@@ -274,15 +274,15 @@ print_pm:
 
     ret
 
-second_msg db 'loaded second stage... ', 0
+second_msg db 'loaded second stage ', 0
 
-a20_enabled_msg db 'a20 line enabled... ', 0
-a20_disabled_msg db 'failed to enable a20 line... ', 0
-memory_map_msg db 'memory map found... ', 0
-memory_error_msg db 'failed detecting memory... ', 0
-disk_error_msg db 'failed reading disk... ', 0
+a20_enabled_msg db 'a20 line enabled ', 0
+a20_disabled_msg db 'failed to enable a20 line ', 0
+memory_map_msg db 'memory map found ', 0
+memory_error_msg db 'failed detecting memory ', 0
+disk_error_msg db 'failed reading disk ', 0
 
-protected_enabled_msg db 'protected mode enabled... ', 0
-paging_enabled_msg db 'paging enabled... ', 0
-cr3_error_msg db 'CR3 register not set successfully... ', 0
-segment_error_msg db 'segment error... ', 0
+protected_enabled_msg db 'protected mode enabled ', 0
+paging_enabled_msg db 'paging enabled ', 0
+cr3_error_msg db 'CR3 register not set successfully ', 0
+segment_error_msg db 'segment error ', 0

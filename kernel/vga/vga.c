@@ -17,7 +17,7 @@ size_t strlen(const char* str) {
 void term_init() {
     terminal_row = 0;
     terminal_column = 0;
-    terminal_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    terminal_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLUE);
     terminal_buffer = (uint16_t*)0xb8000;
 
     term_clear();
@@ -27,10 +27,22 @@ void term_setcolor(uint8_t color) {
     terminal_color = color;
 }
 
+void term_move_cursor(size_t x, size_t y) {
+    size_t position = y * VGA_WIDTH + x;
+
+    outb(0x3d4, 0x0e);
+    outb(0x3d5, (position >> 8) & 0xff);
+
+    outb(0x3d4, 0x0f);
+    outb(0x3d5, position & 0xff);
+}
+
 void term_putentryat(char c, uint8_t color, size_t x, size_t y) {
     const size_t index = y * VGA_WIDTH + x;
 
     terminal_buffer[index] = vga_entry(c, color);
+
+    term_move_cursor(x + 1, y);
 }
 
 void term_clear() {
@@ -39,6 +51,9 @@ void term_clear() {
             term_putentryat(' ', terminal_color, x, y);
         }
     }
+
+    terminal_row = 0;
+    terminal_column = 0;
 }
 
 void term_newline() {
