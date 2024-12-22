@@ -53,6 +53,8 @@ void term_putentryat(char c, uint8_t color, size_t x, size_t y);
 
 void term_clear();
 
+void term_scroll();
+
 void term_newline();
 
 void term_putchar(char c);

@@ -3,7 +3,7 @@
 void printf(const char* format, ...) {
     va_list args;
     va_start(args, format);
-    char buffer[32];
+    char buffer[64];
 
     for (const char *ptr = format; *ptr != '\0'; ptr++) {
         if (*ptr == '%') {
@@ -11,6 +11,26 @@ void printf(const char* format, ...) {
 
             if (*ptr == 'l') {
                 ptr++;
+
+                if (*ptr == 'l') {
+                    ptr++;
+
+                    if (*ptr == 'x') {
+                        long long value = va_arg(args, long long);
+
+                        itoa64(value, buffer, 16);
+                        term_writestring(buffer);
+
+                        continue;
+                    } else if (*ptr == 'd') {
+                        long long value = va_arg(args, long long);
+
+                        itoa64(value, buffer, 10);
+                        term_writestring(buffer);
+
+                        continue;
+                    }
+                }
 
                 if (*ptr == 'x') {
                     long value = va_arg(args, long);

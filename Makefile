@@ -37,7 +37,7 @@ $(OBJ_DIR)/%.o: kernel/%.c
 	$(GCC) $(GCC_FLAGS) $(DEP_FLAGS) -c $< -o $@
 
 $(KERNEL_ELF): $(KERNEL_OBJ) | $(BIN_DIR)
-	$(LD) $(LD_FLAGS) -o $@ $^
+	$(LD) $(LD_FLAGS) -o $@ $^ $(HOME)/opt/cross/lib/gcc/i686-elf/12.2.0/libgcc.a
 
 $(KERNEL_BIN): $(KERNEL_ELF) | $(BIN_DIR)
 	objcopy -O binary $< $@
@@ -46,10 +46,10 @@ $(BASIC_IMG): $(MBR_BIN) $(SECOND_BIN) $(KERNEL_BIN)
 	qemu-img create -f raw $@ 12M
 	dd if=$(MBR_BIN) of=$@ bs=512 count=1 conv=notrunc
 	dd if=$(SECOND_BIN) of=$@ bs=512 count=2 seek=1 conv=notrunc
-	dd if=$(KERNEL_BIN) of=$@ bs=512 count=4 seek=3 conv=notrunc
+	dd if=$(KERNEL_BIN) of=$@ bs=512 count=7 seek=3 conv=notrunc
 
 run: $(BASIC_IMG)
-	qemu-system-x86_64 -m 64M -drive format=raw,file=$(BASIC_IMG)
+	qemu-system-x86_64 -m 4G -drive format=raw,file=$(BASIC_IMG)
 
 debug: $(BASIC_IMG)
 	qemu-system-x86_64 -m 64M -drive format=raw,file=$(BASIC_IMG) -no-reboot -no-shutdown -monitor stdio

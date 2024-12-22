@@ -47,20 +47,42 @@ void term_putentryat(char c, uint8_t color, size_t x, size_t y) {
 
 void term_clear() {
     for (size_t y = 0; y < VGA_HEIGHT; y++) {
-        for (size_t x = 0; x < VGA_WIDTH; x++) {
+        for (size_t x = 0; x < VGA_WIDTH; x++)
             term_putentryat(' ', terminal_color, x, y);
-        }
     }
 
     terminal_row = 0;
     terminal_column = 0;
 }
 
+void term_scroll() {
+    for (size_t y = 0; y < VGA_HEIGHT - 1; y++) {
+        for (size_t x = 0; x < VGA_WIDTH; x++) {
+            const size_t curr_index = y * VGA_WIDTH + x;
+            const size_t new_line_index = (y + 1) * VGA_WIDTH + x;
+
+            terminal_buffer[curr_index] = terminal_buffer[new_line_index];
+        }
+    }
+
+    for (size_t x = 0; x < VGA_WIDTH; x++) {
+        const size_t index = (VGA_HEIGHT - 1) * VGA_WIDTH + x;
+
+        terminal_buffer[index] = vga_entry(' ', terminal_color);
+    }
+}
+
 void term_newline() {
     terminal_column = 0;
 
-    if (++terminal_row == VGA_HEIGHT)
-        terminal_row = 0;
+    if (terminal_row + 1 == VGA_HEIGHT) {
+        term_scroll();
+
+        terminal_row = VGA_HEIGHT - 1;
+    } else
+        terminal_row++;
+    
+    term_move_cursor(terminal_column, terminal_row);
 }
 
 void term_putchar(char c) {

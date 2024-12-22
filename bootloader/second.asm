@@ -2,21 +2,28 @@
 [org 0x7e00]
 
 start:
+    cli
+    mov ax, 0x10
+    mov es, ax
+    mov ss, ax
+    mov sp, 0x7c00
+    sti
+
     mov ah, 0x00
     mov al, 0x03
     
     mov si, second_msg
     call print
 
+    call detect_memory
+
+    mov si, memory_map_msg
+    call print
+
     call enable_a20
     call check_a20
 
     mov si, a20_enabled_msg
-    call print
-
-    call detect_memory
-
-    mov si, memory_map_msg
     call print
 
     push 0x1000
@@ -41,8 +48,8 @@ delay:
 
 check_a20:
     mov ax, 0x1234
-    mov [0x1000], ax
-    mov ax, [0x1000]
+    mov [0x100000], ax
+    mov ax, [0x100000]
     
     cmp ax, 0x1234
     jne a20_disabled
@@ -55,17 +62,22 @@ a20_disabled:
 
     jmp $
 
-mmap_entry equ 0x4000
+mmap_entry_count equ 0x8000
+mmap_entry_base equ 0x8004
+mmap_entry_size equ 24
 
 detect_memory:
-    mov di, 0x4004
+    xor di, di
+    mov di, mmap_entry_base
     xor ebx, ebx
     xor bp, bp
 
+    mov ax, 0x10
+    mov es, ax
 .memory_loop:
-    mov eax, 0xe820
     mov edx, 0x534D4150
-    mov ecx, 24
+    mov eax, 0xe820
+    mov ecx, mmap_entry_size
     mov [es:di + 20], dword 1
 
     int 0x15
@@ -74,12 +86,20 @@ detect_memory:
     cmp eax, edx
     jne .memory_error
 
-    test ebx, ebx
-    je .memory_done
+    mov ecx, [es:di + 8]
+    or ecx, [es:di + 12]
+    jz .skip_entry
 
-    add di, 24
+    add di, mmap_entry_size
     inc bp
-    jmp .memory_loop
+.skip_entry:
+    test ebx, ebx
+    jnz .memory_loop
+
+    mov [es:mmap_entry_count], bp
+
+    clc
+    ret
 .memory_error:
     mov si, memory_error_msg
     call print
@@ -87,15 +107,6 @@ detect_memory:
     stc
 
     jmp $
-.memory_done:
-    mov [es:mmap_entry], bp
-
-    mov ax, [es:mmap_entry]
-    cmp ax, bp
-    jne .memory_error
-    
-    clc
-    ret
 
 enable_protected_mode:
     cli
@@ -120,7 +131,7 @@ print:
 
 load_kernel:
     mov ah, 0x02
-    mov al, 4
+    mov al, 7
     mov ch, 0
     mov cl, 4
     mov dh, 0

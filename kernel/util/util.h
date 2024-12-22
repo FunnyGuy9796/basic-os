@@ -15,9 +15,9 @@ static inline uint8_t inb(uint16_t port) {
     return value;
 }
 
-static inline void itoa(int value, char *str, int base) {
+static inline void itoa(long value, char *str, int base) {
     char *ptr = str, *ptr1 = str, tmp_char;
-    int tmp_value;
+    long tmp_value;
 
     if (value == 0) {
         *str++ = '0';
@@ -46,5 +46,38 @@ static inline void itoa(int value, char *str, int base) {
         *ptr = tmp_char;
     }
 }
+
+static inline void itoa64(long long value, char *str, int base) {
+    char *ptr = str, *ptr1 = str, tmp_char;
+    long long tmp_value;
+
+    if (value == 0) {
+        *str++ = '0';
+        *str = '\0';
+        return;
+    }
+
+    if (value < 0 && base == 10) {
+        *ptr++ = '-';
+        value = -value;
+    }
+
+    tmp_value = value;
+
+    while (tmp_value) {
+        int rem = tmp_value % base;
+        *ptr++ = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        tmp_value /= base;
+    }
+
+    *ptr = '\0';
+
+    while (ptr1 < --ptr) {
+        tmp_char = *ptr1;
+        *ptr1++ = *ptr;
+        *ptr = tmp_char;
+    }
+}
+
 
 #endif
