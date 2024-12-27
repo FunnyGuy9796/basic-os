@@ -27,7 +27,11 @@ void pmm_init() {
 
     uint32_t next_available_address = (bitmap_end + FRAME_SIZE - 1) & ~(FRAME_SIZE - 1);
 
-    printf("pmm... [OK]\n");
+    printf("pmm... [");
+    term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_LIGHT_GREEN);
+    printf("OK");
+    term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_WHITE);
+    printf("]\n");
 
     if (debug)
         printf("    frame_bitmap address: 0x%p\n    bitmap size: %u bytes\n    start of free memory: 0x%x\n", (void*)frame_bitmap, bitmap_size, next_available_address);

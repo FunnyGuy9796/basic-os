@@ -219,6 +219,10 @@ init_page_directory:
     ret
 
 enable_paging:
+    mov eax, cr4
+    or eax, 0x00000010
+    mov cr4, eax
+    
     mov eax, PAGE_DIR_ADDR
     mov cr3, eax
 
@@ -237,7 +241,7 @@ enable_paging:
     mov cr0, eax
 
     mov eax, cr4
-    or eax, 0x00000010
+    or eax, 0x00000001
     mov cr4, eax
 
     ret

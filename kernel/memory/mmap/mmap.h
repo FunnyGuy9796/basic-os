@@ -20,7 +20,7 @@ typedef struct {
 extern uint16_t entry_count;
 extern mmap_entry_t *entries;
 extern mmap_entry_t *first_usable_entry;
-extern uint32_t total_memory;
+extern uint64_t total_memory;
 extern unsigned long kernel_end;
 
 void parse_mmap();

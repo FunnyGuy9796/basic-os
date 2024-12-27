@@ -3,7 +3,7 @@
 uint16_t entry_count;
 mmap_entry_t *entries;
 mmap_entry_t *first_usable_entry;
-uint32_t total_memory;
+uint64_t total_memory;
 unsigned long kernel_end;
 uint16_t i;
 
@@ -36,7 +36,11 @@ void parse_mmap() {
     uint64_t base = ((uint64_t)first_usable_entry->base_high << 32) | first_usable_entry->base_low;
     uint64_t length = ((uint64_t)first_usable_entry->length_high << 32) | first_usable_entry->length_low;
 
-    printf("memory map... [OK]\n");
+    printf("memory map... [");
+    term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_LIGHT_GREEN);
+    printf("OK");
+    term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_WHITE);
+    printf("]\n");
 
     if (debug)
         printf("    total available memory: %.1f GB\n    end of kernel: 0x%lx\n", (double)total_memory / 1073741824.0, kernel_end);
