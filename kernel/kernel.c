@@ -1,12 +1,14 @@
 #include "kernel.h"
 
+bool debug = true;
+
 void main() {
     term_init();
-    printf("loaded kernel v%d\ninitializing system...\n", 1);
+    printf("loaded basic-os kernel\ninitializing system...\n\n");
 
     parse_mmap();
+    pmm_init();
 
-    while (1) {
-        __asm__("hlt");
-    }
+    while (1)
+        asm ("hlt");
 }

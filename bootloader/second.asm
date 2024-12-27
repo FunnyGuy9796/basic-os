@@ -33,6 +33,7 @@ start:
 
     call enable_protected_mode
 
+    hlt
     jmp $
 
 enable_a20:
@@ -60,10 +61,11 @@ a20_disabled:
     mov si, a20_disabled_msg
     call print
 
+    hlt
     jmp $
 
-mmap_entry_count equ 0x8000
-mmap_entry_base equ 0x8004
+mmap_entry_count equ 0x8140
+mmap_entry_base equ 0x8144
 mmap_entry_size equ 24
 
 detect_memory:
@@ -106,6 +108,7 @@ detect_memory:
 
     stc
 
+    hlt
     jmp $
 
 enable_protected_mode:
@@ -131,7 +134,7 @@ print:
 
 load_kernel:
     mov ah, 0x02
-    mov al, 7
+    mov al, 14
     mov ch, 0
     mov cl, 4
     mov dh, 0
@@ -147,6 +150,7 @@ disk_error:
     mov si, disk_error_msg
     call print
 
+    hlt
     jmp $
 
 gdt_start:
@@ -179,6 +183,10 @@ setup_paging:
     mov eax, 0x10000
     or eax, 0x3
     mov [PAGE_TABLE_ADDR + (0x10000 / 0x1000 * 4)], eax
+
+    mov eax, 0x8140
+    or eax, 0x3
+    mov [PAGE_TABLE_ADDR + (0x8140 / 0x1000 * 4)], eax
 
     ret
 
@@ -221,6 +229,7 @@ enable_paging:
     mov esi, cr3_error_msg
     call print_pm
 
+    hlt
     jmp $
 .cr3_ok:
     mov eax, cr0
@@ -266,7 +275,8 @@ protected_mode_entry:
 segment_error:
     mov esi, segment_error_msg
     call print_pm
-
+    
+    hlt
     jmp $
 
 print_pm:
@@ -296,4 +306,5 @@ disk_error_msg db 'failed reading disk ', 0
 protected_enabled_msg db 'protected mode enabled ', 0
 paging_enabled_msg db 'paging enabled ', 0
 cr3_error_msg db 'CR3 register not set successfully ', 0
+protected_memory_error_msg db 'protected memory error ', 0
 segment_error_msg db 'segment error ', 0

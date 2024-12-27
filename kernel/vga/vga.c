@@ -23,8 +23,8 @@ void term_init() {
     term_clear();
 }
 
-void term_setcolor(uint8_t color) {
-    terminal_color = color;
+void term_setcolor(enum vga_color bg, enum vga_color fg) {
+    terminal_color = vga_entry_color(fg, bg);
 }
 
 void term_move_cursor(size_t x, size_t y) {
@@ -53,6 +53,8 @@ void term_clear() {
 
     terminal_row = 0;
     terminal_column = 0;
+
+    term_move_cursor(0, 0);
 }
 
 void term_scroll() {

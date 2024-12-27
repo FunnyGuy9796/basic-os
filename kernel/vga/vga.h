@@ -33,6 +33,8 @@ enum vga_color {
 	VGA_COLOR_WHITE = 15,
 };
 
+size_t strlen(const char* str);
+
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
     return fg | bg << 4;
 }
@@ -41,11 +43,9 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
     return (uint16_t) uc | (uint8_t) color << 8;
 }
 
-size_t strlen(const char* str);
-
 void term_init();
 
-void term_setcolor(uint8_t color);
+void term_setcolor(enum vga_color bg, enum vga_color fg);
 
 void term_move_cursor(size_t x, size_t y);
 

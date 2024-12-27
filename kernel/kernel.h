@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include "vga/vga.h"
 #include "util/print.h"
-#include "memory/mmap.h"
+#include "util/panic.h"
+#include "memory/mmap/mmap.h"
+#include "memory/pmm/pmm.h"
+
+extern bool debug;
 
 #endif
