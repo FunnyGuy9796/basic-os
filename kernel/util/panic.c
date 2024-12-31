@@ -29,19 +29,19 @@ __attribute__((optimize("O0")));
 void kpanic(unsigned int eip) {
     save_regs();
 
-    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+    term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_WHITE);
     term_clear();
 
-    printf("\n\n--------------------------------- KERNEL PANIC ---------------------------------\n\nthe system has encountered a critical error and cannot continue\nplease reboot manually\n");
-    printf("\n\n---------------------------------- PANIC INFO ----------------------------------\n\n");
+    kprint("\n\n--------------------------------- KERNEL PANIC ---------------------------------\n\nthe system has encountered a critical error and cannot continue\nplease reboot manually\n");
+    kprint("\n\n---------------------------------- PANIC INFO ----------------------------------\n\n");
 
-    printf("EAX: %x  EBX: %x  ECX: %x  EDX: %x  ESI: %x  EDI: %x  EBP: %x  ESP: %x  EFLAGS: %x  CS: %x  DS: %x  SS: %x  CR0: %x  CR2: %x  CR3: %x  CR4: %x\n\n", 
+    kprint("EAX: %x  EBX: %x  ECX: %x  EDX: %x  ESI: %x  EDI: %x  EBP: %x  ESP: %x  EFLAGS: %x  CS: %x  DS: %x  SS: %x  CR0: %x  CR2: %x  CR3: %x  CR4: %x\n\n", 
     eax, ebx, ecx, edx, esi, edi, ebp, esp, eflags, cs, ds, ss, cr0, cr2, cr3, cr4);
 
     if (eip == 0)
-        printf("EIP: unable to retrieve EIP value (non-interrupt panic)\n");
+        kprint("EIP: unable to retrieve EIP value (non-interrupt panic)\n");
     else
-        printf("EIP: %x\n", eip);
+        kprint("EIP: %x\n", eip);
 
     while (1)
         asm ("hlt");

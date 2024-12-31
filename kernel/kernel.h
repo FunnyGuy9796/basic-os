@@ -9,6 +9,7 @@
 #include "util/panic.h"
 #include "memory/mmap/mmap.h"
 #include "memory/pmm/pmm.h"
+#include "memory/paging/paging.h"
 
 extern bool debug;
 

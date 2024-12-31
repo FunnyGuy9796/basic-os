@@ -17,8 +17,8 @@ size_t strlen(const char* str) {
 void term_init() {
     terminal_row = 0;
     terminal_column = 0;
-    terminal_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLUE);
-    terminal_buffer = (uint16_t*)0xb8000;
+    terminal_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    terminal_buffer = (uint16_t*)0x7ffe000;
 
     term_clear();
 }

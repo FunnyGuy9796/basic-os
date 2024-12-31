@@ -25,16 +25,17 @@ void pmm_init() {
         free_frames--;
     }
 
-    uint32_t next_available_address = (bitmap_end + FRAME_SIZE - 1) & ~(FRAME_SIZE - 1);
-
-    printf("pmm... [");
-    term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_LIGHT_GREEN);
-    printf("OK");
-    term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_WHITE);
-    printf("]\n");
+    kprint("[ ");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_BROWN);
+    kprint("KERNEL");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+    kprint(" ] pmm... ");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREEN);
+    kprint("OK\n");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
 
     if (debug)
-        printf("    frame_bitmap address: 0x%p\n    bitmap size: %u bytes\n    start of free memory: 0x%x\n", (void*)frame_bitmap, bitmap_size, next_available_address);
+        kprint("    frame_bitmap address: 0x%p\n    bitmap size: %u bytes\n", (void*)frame_bitmap, bitmap_size);
 }
 
 uint32_t pmm_alloc_frame() {

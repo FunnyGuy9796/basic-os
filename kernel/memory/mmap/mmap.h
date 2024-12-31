@@ -21,8 +21,10 @@ extern uint16_t entry_count;
 extern mmap_entry_t *entries;
 extern mmap_entry_t *first_usable_entry;
 extern uint64_t total_memory;
+extern uint32_t kernel_start;
 extern unsigned long kernel_end;
+extern uint64_t last_available_address;
 
-void parse_mmap();
+void parse_mmap(uint32_t k_start);
 
 #endif

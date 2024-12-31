@@ -64,8 +64,8 @@ a20_disabled:
     hlt
     jmp $
 
-mmap_entry_count equ 0x8140
-mmap_entry_base equ 0x8144
+mmap_entry_count equ 0x9000
+mmap_entry_base equ 0x9004
 mmap_entry_size equ 24
 
 detect_memory:
@@ -74,7 +74,7 @@ detect_memory:
     xor ebx, ebx
     xor bp, bp
 
-    mov ax, 0x10
+    xor ax, ax
     mov es, ax
 .memory_loop:
     mov edx, 0x534D4150
@@ -134,7 +134,7 @@ print:
 
 load_kernel:
     mov ah, 0x02
-    mov al, 14
+    mov al, 17
     mov ch, 0
     mov cl, 4
     mov dh, 0
@@ -180,26 +180,32 @@ setup_paging:
     cmp ebx, 0x400000
     jl .map_pages
 
-    mov eax, 0x10000
+    mov eax, 0x9000
     or eax, 0x3
-    mov [PAGE_TABLE_ADDR + (0x10000 / 0x1000 * 4)], eax
-
-    mov eax, 0x8140
-    or eax, 0x3
-    mov [PAGE_TABLE_ADDR + (0x8140 / 0x1000 * 4)], eax
+    mov [PAGE_TABLE_ADDR + ((0x9000 >> 12) * 4)], eax
 
     ret
 
-clear_page_table:
-    mov edi, PAGE_TABLE_ADDR
-
+setup_kernel_mapping:
+    mov edi, PAGE_TABLE_ADDR + 0x1000
     xor eax, eax
     mov ecx, 1024
-.clear_page_table_loop:
+.init_table:
     mov [edi], eax
     add edi, 4
-    loop .clear_page_table_loop
-    
+    loop .init_table
+
+    mov eax, 0x10000 | 0x3
+    mov [PAGE_TABLE_ADDR + 0x1000], eax
+
+    mov eax, 0xb8000 | 0x3
+    mov [PAGE_TABLE_ADDR + ((0x7ffe000 >> 12) * 4)], eax
+
+    mov eax, PAGE_TABLE_ADDR + 0x1000
+    or eax, 0x3
+    mov [PAGE_DIR_ADDR + (512 * 4)], eax
+    mov [PAGE_DIR_ADDR + (511 * 4)], eax
+
     ret
 
 init_page_directory:
@@ -215,6 +221,11 @@ init_page_directory:
     mov eax, PAGE_TABLE_ADDR
     or eax, 0x3
     mov [PAGE_DIR_ADDR], eax
+
+    mov eax, PAGE_TABLE_ADDR + 0x1000
+    or eax, 0x3
+    mov [PAGE_DIR_ADDR + (512 * 4)], eax
+    mov [PAGE_DIR_ADDR + (511 * 4)], eax
 
     ret
 
@@ -241,7 +252,7 @@ enable_paging:
     mov cr0, eax
 
     mov eax, cr4
-    or eax, 0x00000001
+    or eax, 0x00000010
     mov cr4, eax
 
     ret
@@ -262,9 +273,9 @@ protected_mode_entry:
     mov esi, protected_enabled_msg
     call print_pm
 
-    call clear_page_table
     call setup_paging
     call init_page_directory
+    call setup_kernel_mapping
     call enable_paging
 
     mov esi, paging_enabled_msg
@@ -274,7 +285,7 @@ protected_mode_entry:
     cmp ax, 0x10
     jne segment_error
 
-    jmp 0x08:0x10000
+    jmp 0x08:0x80000000
 
 segment_error:
     mov esi, segment_error_msg

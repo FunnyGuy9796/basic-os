@@ -3,10 +3,23 @@
 bool debug = true;
 
 void main() {
-    term_init();
-    printf("loaded basic-os kernel\ninitializing system...\n\n");
+    uint32_t main_addr = (uint32_t)&main;
 
-    parse_mmap();
+    term_init();
+
+    kprint("[ ");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_BROWN);
+    kprint("KERNEL");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+    kprint(" ] loaded basic-os kernel\n");
+
+    kprint("[ ");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_BROWN);
+    kprint("KERNEL");
+    term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+    kprint(" ] initializing system...\n");
+
+    parse_mmap(main_addr);
     pmm_init();
 
     while (1)

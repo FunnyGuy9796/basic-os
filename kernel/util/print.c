@@ -1,6 +1,6 @@
 #include "print.h"
 
-void printf(const char* format, ...) {
+void kprint(const char* format, ...) {
     va_list args;
     va_start(args, format);
     char buffer[1024];

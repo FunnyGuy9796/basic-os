@@ -2,7 +2,7 @@ OUTPUT_FORMAT(elf32-i386)
 ENTRY(main)
 
 SECTIONS {
-    . = 0x10000;
+    . = 0x80000000;
 
     .text : {
         *(.text)
@@ -18,5 +18,5 @@ SECTIONS {
 
     end_of_kernel = .;
 
-    . = ALIGN(8);
+    . = ALIGN(4);
 }

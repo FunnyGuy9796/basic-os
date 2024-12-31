@@ -48,11 +48,14 @@ $(KERNEL_ELF): $(KERNEL_OBJ) $(KERNEL_ASM_OBJ) | $(BIN_DIR)
 $(KERNEL_BIN): $(KERNEL_ELF) | $(BIN_DIR)
 	objcopy -O binary $< $@
 
+SECTOR_SIZE := 512
+SECTOR_COUNT = $(shell echo $$(($(shell wc -c < $1) / $(SECTOR_SIZE) + 1)))
+
 $(BASIC_IMG): $(MBR_BIN) $(SECOND_BIN) $(KERNEL_BIN)
 	qemu-img create -f raw $@ 12M
 	dd if=$(MBR_BIN) of=$@ bs=512 count=1 conv=notrunc
 	dd if=$(SECOND_BIN) of=$@ bs=512 count=2 seek=1 conv=notrunc
-	dd if=$(KERNEL_BIN) of=$@ bs=512 count=14 seek=3 conv=notrunc
+	dd if=$(KERNEL_BIN) of=$@ bs=512 count=$(call SECTOR_COUNT,$(KERNEL_BIN)) seek=3 conv=notrunc
 
 run: $(BASIC_IMG)
 	qemu-system-x86_64 -m 4G -drive format=raw,file=$(BASIC_IMG)

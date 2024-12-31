@@ -5,6 +5,6 @@
 #include "util.h"
 #include "../vga/vga.h"
 
-void printf(const char* format, ...);
+void kprint(const char* format, ...);
 
 #endif
