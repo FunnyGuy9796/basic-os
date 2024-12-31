@@ -196,14 +196,20 @@ setup_kernel_mapping:
     loop .init_table
 
     mov eax, 0x10000 | 0x3
+    mov [PAGE_TABLE_ADDR + 0x0000], eax
+
+    mov eax, 0x11000 | 0x3
     mov [PAGE_TABLE_ADDR + 0x1000], eax
 
     mov eax, 0xb8000 | 0x3
-    mov [PAGE_TABLE_ADDR + ((0x7ffe000 >> 12) * 4)], eax
+    mov [PAGE_TABLE_ADDR + 0x1000 + (1022 * 4)], eax
+
+    mov eax, PAGE_TABLE_ADDR + 0x0000
+    or eax, 0x3
+    mov [PAGE_DIR_ADDR + (512 * 4)], eax
 
     mov eax, PAGE_TABLE_ADDR + 0x1000
     or eax, 0x3
-    mov [PAGE_DIR_ADDR + (512 * 4)], eax
     mov [PAGE_DIR_ADDR + (511 * 4)], eax
 
     ret
@@ -222,9 +228,12 @@ init_page_directory:
     or eax, 0x3
     mov [PAGE_DIR_ADDR], eax
 
-    mov eax, PAGE_TABLE_ADDR + 0x1000
+    mov eax, PAGE_TABLE_ADDR + 0x0000
     or eax, 0x3
     mov [PAGE_DIR_ADDR + (512 * 4)], eax
+
+    mov eax, PAGE_TABLE_ADDR + 0x1000
+    or eax, 0x3
     mov [PAGE_DIR_ADDR + (511 * 4)], eax
 
     ret
