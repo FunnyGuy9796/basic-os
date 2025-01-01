@@ -180,37 +180,11 @@ setup_paging:
     cmp ebx, 0x400000
     jl .map_pages
 
-    mov eax, 0x9000
-    or eax, 0x3
+    mov eax, 0x9000 | 0x3
     mov [PAGE_TABLE_ADDR + ((0x9000 >> 12) * 4)], eax
 
-    ret
-
-setup_kernel_mapping:
-    mov edi, PAGE_TABLE_ADDR + 0x1000
-    xor eax, eax
-    mov ecx, 1024
-.init_table:
-    mov [edi], eax
-    add edi, 4
-    loop .init_table
-
     mov eax, 0x10000 | 0x3
-    mov [PAGE_TABLE_ADDR + 0x0000], eax
-
-    mov eax, 0x11000 | 0x3
-    mov [PAGE_TABLE_ADDR + 0x1000], eax
-
-    mov eax, 0xb8000 | 0x3
-    mov [PAGE_TABLE_ADDR + 0x1000 + (1022 * 4)], eax
-
-    mov eax, PAGE_TABLE_ADDR + 0x0000
-    or eax, 0x3
-    mov [PAGE_DIR_ADDR + (512 * 4)], eax
-
-    mov eax, PAGE_TABLE_ADDR + 0x1000
-    or eax, 0x3
-    mov [PAGE_DIR_ADDR + (511 * 4)], eax
+    mov [PAGE_TABLE_ADDR + ((0x10000 >> 12) * 4)], eax
 
     ret
 
@@ -224,17 +198,8 @@ init_page_directory:
     add edi, 4
     loop .clear_directory
 
-    mov eax, PAGE_TABLE_ADDR
-    or eax, 0x3
+    mov eax, PAGE_TABLE_ADDR | 0x3
     mov [PAGE_DIR_ADDR], eax
-
-    mov eax, PAGE_TABLE_ADDR + 0x0000
-    or eax, 0x3
-    mov [PAGE_DIR_ADDR + (512 * 4)], eax
-
-    mov eax, PAGE_TABLE_ADDR + 0x1000
-    or eax, 0x3
-    mov [PAGE_DIR_ADDR + (511 * 4)], eax
 
     ret
 
@@ -284,7 +249,6 @@ protected_mode_entry:
 
     call setup_paging
     call init_page_directory
-    call setup_kernel_mapping
     call enable_paging
 
     mov esi, paging_enabled_msg
@@ -294,7 +258,7 @@ protected_mode_entry:
     cmp ax, 0x10
     jne segment_error
 
-    jmp 0x08:0x80000000
+    jmp 0x08:0x10000
 
 segment_error:
     mov esi, segment_error_msg

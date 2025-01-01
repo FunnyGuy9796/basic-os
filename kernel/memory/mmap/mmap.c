@@ -56,5 +56,5 @@ void parse_mmap(uint32_t k_start) {
     term_setcolor(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
 
     if (debug)
-        kprint("    total available memory: %.1f GB\n    start of kernel: 0x%lx\n    end of kernel: 0x%lx\n    last available address: 0x%lx\n", (double)total_memory / 1073741824.0, kernel_start, kernel_end, last_available_address);
+        kprint("    total available memory: %.1f GB (%lld bytes)\n    kernel start: 0x%lx\n    kernel end: 0x%lx\n    kernel size: %d bytes\n    last available address: 0x%lx\n", (double)total_memory / 1000000000.0, total_memory, kernel_start, kernel_end, kernel_end - kernel_start, last_available_address);
 }
