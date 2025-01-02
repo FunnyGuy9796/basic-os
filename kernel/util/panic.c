@@ -4,8 +4,7 @@ unsigned int eax, ebx, ecx, edx, esi, edi, ebp, esp, eip, eflags;
 unsigned int cr0, cr2, cr3, cr4;
 unsigned short cs, ds, ss;
 
-__attribute__((optimize("O0")));
-void save_regs() {
+__attribute__((optimize("O0"))) void save_regs() {
     asm volatile ("mov %%eax, %0" : "=r"(eax));
     asm volatile ("mov %%ebx, %0" : "=r"(ebx));
     asm volatile ("mov %%ecx, %0" : "=r"(ecx));
@@ -25,8 +24,7 @@ void save_regs() {
     asm volatile ("mov %%cr4, %0" : "=r"(cr4));
 }
 
-__attribute__((optimize("O0")));
-void kpanic(unsigned int eip) {
+__attribute__((optimize("O0"))) void kpanic(unsigned int eip) {
     save_regs();
 
     term_setcolor(VGA_COLOR_BLUE, VGA_COLOR_WHITE);

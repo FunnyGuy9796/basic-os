@@ -145,7 +145,7 @@ void kprint(const char* format, ...) {
             case 'p': {
                 void *ptr = va_arg(args, void*);
 
-                num_to_str((unsigned long long)ptr, buffer, 16, 0);
+                num_to_str((unsigned long)ptr, buffer, 16, 0);
 
                 for (int j = 0; buffer[j] != '\0'; j++) {
                     term_putchar(buffer[j]);
