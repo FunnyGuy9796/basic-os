@@ -22,6 +22,7 @@ start:
 
     call enable_a20
     call check_a20
+    jz a20_disabled
 
     mov si, a20_enabled_msg
     call print
@@ -41,20 +42,60 @@ enable_a20:
     or al, 0x02
     out 0x92, al
 
-    mov cx, 0x10000
+    mov ecx, 0x10000
 delay:
-    loop delay
+    o32 loop delay
 
     ret
 
-check_a20:
-    mov ax, 0x1234
-    mov [0x100000], ax
-    mov ax, [0x100000]
-    
-    cmp ax, 0x1234
-    jne a20_disabled
+; Function: a20_check
+;           Determine if the A20 line is enabled or disabled
+;
+; Inputs:   None
+; Clobbers: AX, CX
+; Returns:  ZF=1 if A20 enabled, ZF=0 if disabled
 
+check_a20:
+    pushf                      ; Save flags so Interrupt Flag (IF) can be restored
+    push es
+    push ds                    ; Save volatile registers
+    push si
+    push di
+
+    cli                        ; Disable interrupts
+    xor ax, ax
+    mov ds, ax
+    mov si, 0x600              ; 0x0000:0x0600 (0x00600) address we will test
+
+    mov ax, 0xffff
+    mov es, ax
+    mov di, 0x610              ; 0xffff:0x0610 (0x00600) address we will test
+                               ; The physical address pointed to depends on whether
+                               ; memory wraps or not. If it wraps then A20 is disabled
+
+    mov cl, [si]               ; Save byte at 0x0000:0x0600
+    mov ch, [es:di]            ; Save byte at 0xffff:0x0610
+
+    mov byte [si], 0xaa        ; Write 0xaa to 0x0000:0x0600
+    mov byte [es:di], 0x55     ; Write 0x55 to 0xffff:0x0610
+
+    xor ax, ax                 ; Set return value 0
+    cmp byte [si], 0x55        ; If 0x0000:0x0600 is 0x55 and not 0xaa
+    je .disabled               ;     then memory wrapped because A20 is disabled
+
+    dec ax                     ; A20 Disable, set AX to -1
+.disabled:
+    ; Cleanup by restoring original bytes in memory. This must be in reverse
+    ; order from the order they were originally saved
+    mov [es:di], ch            ; Restore data saved data to 0xffff:0x0610
+    mov [si], cl               ; Restore data saved data to 0x0000:0x0600
+
+    pop di                     ; Restore non-volatile registers
+    pop si
+    pop ds
+    pop es
+    popf                       ; Restore Flags (including IF)
+    test al, al                ; Return ZF=1 if A20 enabled, ZF=0 if disabled
     ret
 
 a20_disabled:
@@ -233,14 +274,13 @@ enable_paging:
 
 protected_mode_entry:
     mov ax, 0x10
-    mov cs, ax
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
 
-    mov esp, 0x7ffff
+    mov esp, 0x80000
 
     mov edx, 0xb8000
 
@@ -254,18 +294,8 @@ protected_mode_entry:
     mov esi, paging_enabled_msg
     call print_pm
 
-    mov ax, cs
-    cmp ax, 0x10
-    jne segment_error
-
+    xchg bx, bx
     jmp 0x08:0x10000
-
-segment_error:
-    mov esi, segment_error_msg
-    call print_pm
-    
-    hlt
-    jmp $
 
 print_pm:
     mov ebx, edx
@@ -295,4 +325,3 @@ protected_enabled_msg db 'protected mode enabled ', 0
 paging_enabled_msg db 'paging enabled ', 0
 cr3_error_msg db 'CR3 register not set successfully ', 0
 protected_memory_error_msg db 'protected memory error ', 0
-segment_error_msg db 'segment error ', 0

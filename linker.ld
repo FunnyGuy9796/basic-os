@@ -5,14 +5,21 @@ SECTIONS {
     . = 0x10000;
 
     .text : {
-        *(.text)
+        /* Ensure what is in .text.startup appears first */
+        *(.text.startup)
+        *(.text*)
     }
 
     .data : {
         *(.data)
     }
 
+    .rodata : {
+        *(.rodata*)
+    }
+
     .bss : {
+        *(COMMON)
         *(.bss)
     }
 

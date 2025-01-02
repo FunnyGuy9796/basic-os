@@ -75,7 +75,7 @@ void unmap_page(void *virt_addr) {
     if (!is_aligned(virt_addr))
         kpanic(0);
 
-    uint32_t phys_addr = get_physaddr(virt_addr);
+    uint32_t phys_addr = (uint32_t)get_physaddr(virt_addr);
 
     if (phys_addr != 0)
         pmm_free_frame(phys_addr);

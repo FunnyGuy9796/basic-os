@@ -2,8 +2,8 @@
 
 bool debug = true;
 
-void main() {
-    uint32_t main_addr = (uint32_t)&main;
+void kmain(void) {
+    uint32_t main_addr = (uint32_t)&kmain;
 
     term_init();
 
